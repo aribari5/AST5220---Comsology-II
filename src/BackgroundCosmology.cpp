@@ -22,10 +22,16 @@ BackgroundCosmology::BackgroundCosmology(
   //=============================================================================
   // TODO: Compute OmegaR, OmegaNu, OmegaLambda, H0, ...
   //=============================================================================
-  //...
-  //...
-  //...
-  //...
+
+  H0 = 100.0*h;                                                             // Hubble parameter today in km/s/Mpc
+  H0_SI = H0 * Constants.km / Constants.Mpc;                                   // Hubble parameter today in 1/s
+  OmegaR = ( pow(Constants.pi,2)*pow(Constants.k_b*TCMB,4)*8*Constants.G ) 
+  / ( 15.0*pow(Constants.c,5)*pow(Constants.hbar,3)*3.0*pow(H0_SI,2) );  // Radiation density today
+
+
+  OmegaNu = Neff*(7.0/8.0)*pow(4.0/11.0,4.0/3.0)*OmegaR;       // Neutrino density today
+
+  OmegaLambda = 1.0 - OmegaB - OmegaCDM - OmegaR - OmegaNu - OmegaK;          // Dark energy density today
 }
 
 //====================================================

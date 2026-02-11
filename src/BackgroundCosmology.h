@@ -11,6 +11,7 @@ class BackgroundCosmology{
    
     // Cosmological parameters
     double h;                       // Little h = H0/(100km/s/Mpc)
+    double H0_SI;                   // Hubble parameter today in 1/s 
     double OmegaB;                  // Baryon density today
     double OmegaCDM;                // CDM density today
     double OmegaK;                  // Curvature density 

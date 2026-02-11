@@ -35,6 +35,7 @@ extern struct ConstantsAndUnits {
   const double m_H         = 1.6735575e-27 * kg;          // Mass of hydrogen atom
   const double c           = 2.99792458e8 * m/s;          // Speed of light
   const double G           = 6.67430e-11 * N*m*m/(kg*kg); // Gravitational constant
+  const double pi          = 3.14159265358979323846;      // Pi
   const double hbar        = 1.054571817e-34 * J*s;       // Reduced Plancks constant
   const double sigma_T     = 6.6524587158e-29 * m*m;      // Thomas scattering cross-section
   const double lambda_2s1s = 8.227 / s;                   // Transition time between 2s and 1s in Hydrogen
