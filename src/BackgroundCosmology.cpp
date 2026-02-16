@@ -23,15 +23,14 @@ BackgroundCosmology::BackgroundCosmology(
   // TODO: Compute OmegaR, OmegaNu, OmegaLambda, H0, ...
   //=============================================================================
 
-  H0 = 100.0*h;                                                             // Hubble parameter today in km/s/Mpc
-  H0_SI = H0 * Constants.km / Constants.Mpc;                                   // Hubble parameter today in 1/s
+  H0 = 100.0*h;                                                                 // Hubble parameter today in km/s/Mpc
+  H0_SI = H0 * Constants.km / Constants.Mpc;                                    // Hubble parameter today in 1/s
   OmegaR = ( pow(Constants.pi,2)*pow(Constants.k_b*TCMB,4)*8*Constants.G ) 
-  / ( 15.0*pow(Constants.c,5)*pow(Constants.hbar,3)*3.0*pow(H0_SI,2) );  // Radiation density today
+  / ( 15.0*pow(Constants.c,5)*pow(Constants.hbar,3)*3.0*pow(H0_SI,2) );         // Radiation density today
 
+  OmegaNu = Neff*(7.0/8.0)*pow(4.0/11.0,4.0/3.0)*OmegaR;                        // Neutrino density today
 
-  OmegaNu = Neff*(7.0/8.0)*pow(4.0/11.0,4.0/3.0)*OmegaR;       // Neutrino density today
-
-  OmegaLambda = 1.0 - OmegaB - OmegaCDM - OmegaR - OmegaNu - OmegaK;          // Dark energy density today
+  OmegaLambda = 1.0 - OmegaB - OmegaCDM - OmegaR - OmegaNu - OmegaK;            // Dark energy density today
 }
 
 //====================================================
@@ -46,7 +45,13 @@ void BackgroundCosmology::solve(){
   // TODO: Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
-  Vector x_array;
+  x_start = -10.0;
+  x_end   = 0.0;
+  npts    = 100;
+
+  Vector x_array = Utils::linspace(x_start, x_end, npts);
+
+
 
   // The ODE for deta/dx
   ODEFunction detadx = [&](double x, const double *eta, double *detadx){
@@ -80,30 +85,36 @@ void BackgroundCosmology::solve(){
 
 double BackgroundCosmology::H_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // TODO: The Hubble parameter as a function of x = exp(a). 
   //=============================================================================
-  //...
-  //...
 
-  return 0.0;
+  double H = H0 * sqrt( 
+    (OmegaB + OmegaCDM)*exp(-3.0*x) 
+    + (OmegaR + OmegaNu)*exp(-4.0*x) 
+    + OmegaLambda 
+    + OmegaK*exp(-2.0*x) );
+
+  return H;
 }
 
 double BackgroundCosmology::Hp_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // TODO: The conformal Hubble parameter as a function of x = exp(a). Using Hp = a*H = exp(x)*H
   //=============================================================================
-  //...
-  //...
 
-  return 0.0;
+  double Hp = H_of_x(x) * exp(x);
+
+  return Hp;
 }
 
 double BackgroundCosmology::dHpdx_of_x(double x) const{
   //=============================================================================
   // TODO: Implement...
   //=============================================================================
-  //...
-  //...
+  double dHpdx = Hp_of_x(x) + exp(x)*pow(H0,2.0)/(2*H_of_x(x))
+                * ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
+                    -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
+                    -2.0*OmegaK*exp(-2.0*x) );
 
   return 0.0;
 }
