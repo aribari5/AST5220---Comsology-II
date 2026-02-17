@@ -109,24 +109,54 @@ double BackgroundCosmology::Hp_of_x(double x) const{
 
 double BackgroundCosmology::dHpdx_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // The derivative of the conformal Hubble parameter with respect to x. 
   //=============================================================================
-  double dHpdx = Hp_of_x(x) + exp(x)*pow(H0,2.0)/(2*H_of_x(x))
+
+  // Intermediate variables
+  double H = H_of_x(x);         
+  double Hp = Hp_of_x(x);
+  
+
+
+  double dHpdx = Hp + exp(x)*pow(H0,2.0)/(2*H)
                 * ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
                     -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
                     -2.0*OmegaK*exp(-2.0*x) );
 
-  return 0.0;
+  return dHpdx;
 }
 
 double BackgroundCosmology::ddHpddx_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // The double derivative of the conformal Hubble parameter with respect to x. 
   //=============================================================================
-  //...
-  //...
 
-  return 0.0;
+
+  // Intermediate variables
+  double H = H_of_x(x);         
+  double Hp = Hp_of_x(x);
+  double dHpdx = dHpdx_of_x(x);
+  double dHdx = pow(H0,2.0)/(2.0*H) *
+                ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
+                    -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
+                    -2.0*OmegaK*exp(-2.0*x) );
+
+
+
+
+
+
+
+  double ddHpddx = dHpdx + pow(H0,2.0)/2.0 * 
+                  (exp(x)*H-exp(x)*dHdx)/pow(H,2.0) *
+                  ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
+                    -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
+                    -2.0*OmegaK*exp(-2.0*x) ) +
+                    exp(x)/H * 
+                    ( 9.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
+                    +16.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
+                    +4.0*OmegaK*exp(-2.0*x))
+  return ddHpddx;
 }
 
 double BackgroundCosmology::get_OmegaB(double x) const{ 
