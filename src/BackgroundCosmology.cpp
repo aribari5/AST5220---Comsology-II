@@ -47,7 +47,7 @@ void BackgroundCosmology::solve(){
   //=============================================================================
   x_start = -10.0;
   x_end   = 0.0;
-  npts    = 100;
+  int npts    = 100;
 
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 
@@ -57,24 +57,29 @@ void BackgroundCosmology::solve(){
   ODEFunction detadx = [&](double x, const double *eta, double *detadx){
 
     //=============================================================================
-    // TODO: Set the rhs of the detadx ODE
+    // The rhs of the detadx ODE
     //=============================================================================
-    //...
-    //...
+    
 
-    detadx[0] = 0.0;
+    detadx[0] = Constants.c/Hp_of_x(x);
 
     return GSL_SUCCESS;
   };
 
   //=============================================================================
-  // TODO: Set the initial condition, set up the ODE system, solve and make
-  // the spline eta_of_x_spline 
+  // Setting initial condition, solving the ODE and making the spline.
   //=============================================================================
-  // ...
-  // ...
-  // ...
-  // ...
+  
+  double eta_initial = 0.0;     
+  Vector eta_ic{eta_initial};       // vector with i.c. for eta
+
+  ODESolver ode_solver;
+
+  ode_solver.solve(detadx, x_array, eta_ic,_FIDUCIAL_STEPPER);    // solve. Had to include a stepper since it expected 4 argumetns.
+  
+  Vector eta_array = ode_solver.get_data_by_component(0);         // get the 0th component of the sol.
+
+  eta_of_x_spline.create(x_array, eta_array, "Eta of x");         // create spline
 
   Utils::EndTiming("Eta");
 }
@@ -85,7 +90,7 @@ void BackgroundCosmology::solve(){
 
 double BackgroundCosmology::H_of_x(double x) const{
   //=============================================================================
-  // TODO: The Hubble parameter as a function of x = exp(a). 
+  // The Hubble parameter as a function of x = exp(a). 
   //=============================================================================
 
   double H = H0 * sqrt( 
@@ -99,7 +104,7 @@ double BackgroundCosmology::H_of_x(double x) const{
 
 double BackgroundCosmology::Hp_of_x(double x) const{
   //=============================================================================
-  // TODO: The conformal Hubble parameter as a function of x = exp(a). Using Hp = a*H = exp(x)*H
+  // The conformal Hubble parameter as a function of x = exp(a). Using Hp = a*H = exp(x)*H
   //=============================================================================
 
   double Hp = H_of_x(x) * exp(x);
@@ -144,9 +149,6 @@ double BackgroundCosmology::ddHpddx_of_x(double x) const{
 
 
 
-
-
-
   double ddHpddx = dHpdx + pow(H0,2.0)/2.0 * 
                   (exp(x)*H-exp(x)*dHdx)/pow(H,2.0) *
                   ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
@@ -155,87 +157,154 @@ double BackgroundCosmology::ddHpddx_of_x(double x) const{
                     exp(x)/H * 
                     ( 9.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
                     +16.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
-                    +4.0*OmegaK*exp(-2.0*x))
+                    +4.0*OmegaK*exp(-2.0*x));
   return ddHpddx;
 }
 
 double BackgroundCosmology::get_OmegaB(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The baryon density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
 
-  return 0.0;
+  double OmegaB_x = OmegaB * exp(3.0*x) * pow(H0/H_of_x(x),2.0);
+
+  return OmegaB_x;
 }
 
 double BackgroundCosmology::get_OmegaR(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The radiation density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double OmegaR_x = OmegaR * exp(4.0*x) * pow(H0/H_of_x(x),2.0);
 
-  return 0.0;
+  return OmegaR_x;
 }
 
 double BackgroundCosmology::get_OmegaNu(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The neutrino density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double OmegaNu_x = OmegaNu * exp(4.0*x) * pow(H0/H_of_x(x),2.0);
 
-  return 0.0;
+  return OmegaNu_x;
 }
 
 double BackgroundCosmology::get_OmegaCDM(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The CDM density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+    
+  double OmegaCDM_x = OmegaCDM * exp(3.0*x) * pow(H0/H_of_x(x),2.0);
 
-  return 0.0;
+
+  return OmegaCDM_x;
 }
 
 double BackgroundCosmology::get_OmegaLambda(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The dark energy density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double OmegaLambda_x = OmegaLambda * pow(H0/H_of_x(x),2.0);
 
-  return 0.0;
+  return OmegaLambda_x;
 }
 
 double BackgroundCosmology::get_OmegaK(double x) const{ 
   //=============================================================================
-  // TODO: Implement...
+  // The curvature density as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double OmegaK_x = OmegaK * exp(2.0*x) * pow(H0/H_of_x(x),2.0);
 
-  return 0.0;
+  return OmegaK_x;
 }
-    
+double BackgroundCosmology::get_OmegaM(double x) const{ 
+  //=============================================================================
+  // The total matter density as a function of x = exp(a). (i saw this in the header but they were not in the cpp file so i added them here)
+  //=============================================================================
+  
+  return get_OmegaB(x) + get_OmegaCDM(x);
+}
+ double BackgroundCosmology::get_OmegaRtot(double x) const{ 
+  //=============================================================================
+  // The total radiation density as a function of x = exp(a). (i saw this in the header but they were not in the cpp file so i added them here)
+  //=============================================================================
+  
+  return get_OmegaR(x) + get_OmegaNu(x);
+}
+
+ double BackgroundCosmology::get_OmegaMnu(double x) const{ 
+  //=============================================================================
+  // The total matter and neutrino density as a function of x = exp(a). (i saw this in the header but they were not in the cpp file so i added them here) (also idk what it is)
+  //=============================================================================
+  
+  return get_OmegaM(x) + get_OmegaNu(x);
+ }
+
 double BackgroundCosmology::get_luminosity_distance_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // The luminosity distance as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double d_L = get_angular_distance_of_x(x)*exp(-2.0*x);
 
-  return 0.0;
+  return d_L;
 }
+
+double BackgroundCosmology::get_r_of_x(double x) const{
+  //=============================================================================
+  // r for different curvature cases as a function of x = exp(a).
+  //=============================================================================
+  
+  double chi = get_comoving_distance_of_x(x);
+  
+  
+
+  if (std::abs(OmegaK) < 1e-10){                                      // Flat universe
+
+    return chi;
+  }
+  
+  
+  double omega_arg = sqrt( abs(OmegaK) )  * (H0*chi)/Constants.c;
+
+  if (OmegaK < 0.0){                                                 // Open universe
+
+    
+    return chi * ( sin(omega_arg)/(omega_arg) );
+    }
+
+  else {                                                              // Closed universe
+
+    double omega_arg = sqrt( abs(OmegaK) )  * (H0*chi)/Constants.c;
+
+    return chi * ( sinh(omega_arg)/(omega_arg) );
+  }
+
+  
+}
+
+double BackgroundCosmology::get_angular_distance_of_x(double x) const{
+  //=============================================================================
+  // The angular distance as a function of x = exp(a).
+  //=============================================================================
+  
+  double d_A = exp(x)*get_r_of_x(x);
+
+  return d_A;
+}
+
 double BackgroundCosmology::get_comoving_distance_of_x(double x) const{
   //=============================================================================
-  // TODO: Implement...
+  // The comoving distance as a function of x = exp(a).
   //=============================================================================
-  //...
-  //...
+  
+  double comoving_distance = eta_of_x(0.0) - eta_of_x(x);
 
-  return 0.0;
+  return comoving_distance;
 }
 
 double BackgroundCosmology::eta_of_x(double x) const{
