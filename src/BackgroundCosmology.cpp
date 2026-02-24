@@ -25,7 +25,7 @@ BackgroundCosmology::BackgroundCosmology(
 
   H0 = 100.0*h;                                                                 // Hubble parameter today in km/s/Mpc
   H0_SI = H0 * Constants.km / Constants.Mpc;                                    // Hubble parameter today in 1/s
-  OmegaR = ( pow(Constants.pi,2)*pow(Constants.k_b*TCMB,4)*8*Constants.G ) 
+  OmegaR = ( pow(Constants.pi,3)*pow(Constants.k_b*TCMB,4)*8*Constants.G ) 
   / ( 15.0*pow(Constants.c,5)*pow(Constants.hbar,3)*3.0*pow(H0_SI,2) );         // Radiation density today
 
   OmegaNu = Neff*(7.0/8.0)*pow(4.0/11.0,4.0/3.0)*OmegaR;                        // Neutrino density today
@@ -42,7 +42,7 @@ void BackgroundCosmology::solve(){
   Utils::StartTiming("Eta");
     
   //=============================================================================
-  // TODO: Set the range of x and the number of points for the splines
+  // Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
   x_start = -10.0;
@@ -74,11 +74,19 @@ void BackgroundCosmology::solve(){
 
   ODESolver ode_solver;
 
-  ode_solver.solve(detadx, x_array, eta_ic,_FIDUCIAL_STEPPER);    // solve. Had to include a stepper since it expected 4 argumetns.
+  ode_solver.solve(detadx, x_array, eta_ic,gsl_odeiv2_step_rkf45);    // solve. Had to include a stepper since it expected 4 argumetns.
   
   Vector eta_array = ode_solver.get_data_by_component(0);         // get the 0th component of the sol.
 
   eta_of_x_spline.create(x_array, eta_array, "Eta of x");         // create spline
+
+  std::cout << "---------------------------------\n";
+  std::cout << "Conformal time today:\n";
+  std::cout << "eta(x=0) = "
+            << eta_of_x(0.0)/(Constants.c)
+            << " Gyr\n";
+  std::cout << "---------------------------------\n";
+
 
   Utils::EndTiming("Eta");
 
@@ -110,7 +118,7 @@ void BackgroundCosmology::solve(){
 
   //still using ODESolver ode_solver;
 
-  ode_solver.solve(dtdx, x_array, t_ic,_FIDUCIAL_STEPPER);    // solve. Had to include a stepper since it expected 4 argumetns.
+  ode_solver.solve(dtdx, x_array, t_ic,gsl_odeiv2_step_rkf45);    // solve. Had to include a stepper since it expected 4 argumetns.
   
   Vector t_array = ode_solver.get_data_by_component(0);         // get the 0th component of the sol.
 
@@ -291,7 +299,9 @@ double BackgroundCosmology::get_luminosity_distance_of_x(double x) const{
   // The luminosity distance as a function of x = exp(a).
   //=============================================================================
   
-  double d_L = get_angular_distance_of_x(x)*exp(-2.0*x);
+  
+  double d_L_seconds = get_angular_distance_of_x(x) * exp(-2.0 * x);
+  double d_L = d_L_seconds / Constants.c / Constants.Gyr;           // in Gyr
 
   return d_L;
 }
@@ -313,15 +323,13 @@ double BackgroundCosmology::get_r_of_x(double x) const{
   
   double omega_arg = sqrt( abs(OmegaK) )  * (H0*chi)/Constants.c;
 
-  if (OmegaK < 0.0){                                                 // Open universe
+  if (OmegaK < 0.0){                                                 // Closed universe
 
     
     return chi * ( sin(omega_arg)/(omega_arg) );
     }
 
-  else {                                                              // Closed universe
-
-    double omega_arg = sqrt( abs(OmegaK) )  * (H0*chi)/Constants.c;
+  else {                                                              // Open universe
 
     return chi * ( sinh(omega_arg)/(omega_arg) );
   }
@@ -404,17 +412,18 @@ void BackgroundCosmology::output(const std::string filename) const{
 
   std::ofstream fp(filename.c_str());
   auto print_data = [&] (const double x) {
-    fp << x                  << " ";
-    fp << eta_of_x(x)        << " ";
-    fp << t_of_x(x)          << " ";
-    fp << Hp_of_x(x)         << " ";
-    fp << dHpdx_of_x(x)      << " ";
-    fp << get_OmegaB(x)      << " ";
-    fp << get_OmegaCDM(x)    << " ";
-    fp << get_OmegaLambda(x) << " ";
-    fp << get_OmegaR(x)      << " ";
-    fp << get_OmegaNu(x)     << " ";
-    fp << get_OmegaK(x)      << " ";
+    fp << x                               << " ";
+    fp << eta_of_x(x)                     << " ";
+    fp << t_of_x(x)                       << " ";
+    fp << Hp_of_x(x)                      << " ";
+    fp << dHpdx_of_x(x)                   << " ";
+    fp << get_OmegaB(x)                   << " ";
+    fp << get_OmegaCDM(x)                 << " ";
+    fp << get_OmegaLambda(x)              << " ";
+    fp << get_OmegaR(x)                   << " ";
+    fp << get_OmegaNu(x)                  << " ";
+    fp << get_OmegaK(x)                   << " ";
+    fp << get_luminosity_distance_of_x(x) << " ";
     fp <<"\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
