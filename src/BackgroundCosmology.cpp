@@ -216,7 +216,7 @@ double BackgroundCosmology::get_OmegaB(double x) const{
   // The baryon density as a function of x = exp(a).
   //=============================================================================
 
-  double OmegaB_x = OmegaB * exp(3.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaB_x = OmegaB * exp(-3.0*x) * pow(H0/H_of_x(x),2.0);
 
   return OmegaB_x;
 }
@@ -226,7 +226,7 @@ double BackgroundCosmology::get_OmegaR(double x) const{
   // The radiation density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaR_x = OmegaR * exp(4.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaR_x = OmegaR * exp(-4.0*x) * pow(H0/H_of_x(x),2.0);
 
   return OmegaR_x;
 }
@@ -236,7 +236,7 @@ double BackgroundCosmology::get_OmegaNu(double x) const{
   // The neutrino density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaNu_x = OmegaNu * exp(4.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaNu_x = OmegaNu * exp(-4.0*x) * pow(H0/H_of_x(x),2.0);
 
   return OmegaNu_x;
 }
@@ -246,7 +246,7 @@ double BackgroundCosmology::get_OmegaCDM(double x) const{
   // The CDM density as a function of x = exp(a).
   //=============================================================================
     
-  double OmegaCDM_x = OmegaCDM * exp(3.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaCDM_x = OmegaCDM * exp(-3.0*x) * pow(H0/H_of_x(x),2.0);
 
 
   return OmegaCDM_x;
@@ -267,7 +267,7 @@ double BackgroundCosmology::get_OmegaK(double x) const{
   // The curvature density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaK_x = OmegaK * exp(2.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaK_x = OmegaK * exp(-2.0*x) * pow(H0/H_of_x(x),2.0);
 
   return OmegaK_x;
 }
@@ -321,7 +321,7 @@ double BackgroundCosmology::get_r_of_x(double x) const{
   }
   
   
-  double omega_arg = sqrt( abs(OmegaK) )  * (H0*chi)/Constants.c;
+  double omega_arg = sqrt( abs(OmegaK) )  * (H0_SI*chi)/Constants.c;
 
   if (OmegaK < 0.0){                                                 // Closed universe
 
@@ -412,18 +412,18 @@ void BackgroundCosmology::output(const std::string filename) const{
 
   std::ofstream fp(filename.c_str());
   auto print_data = [&] (const double x) {
-    fp << x                               << " ";
-    fp << eta_of_x(x)                     << " ";
-    fp << t_of_x(x)                       << " ";
-    fp << Hp_of_x(x)                      << " ";
-    fp << dHpdx_of_x(x)                   << " ";
-    fp << get_OmegaB(x)                   << " ";
-    fp << get_OmegaCDM(x)                 << " ";
-    fp << get_OmegaLambda(x)              << " ";
-    fp << get_OmegaR(x)                   << " ";
-    fp << get_OmegaNu(x)                  << " ";
-    fp << get_OmegaK(x)                   << " ";
-    fp << get_luminosity_distance_of_x(x) << " ";
+    fp << x                               << " ";       // 0
+    fp << eta_of_x(x)                     << " ";       // 1
+    fp << t_of_x(x)                       << " ";       // 2
+    fp << Hp_of_x(x)                      << " ";       // 3
+    fp << dHpdx_of_x(x)                   << " ";       // 4
+    fp << get_OmegaB(x)                   << " ";       // 5
+    fp << get_OmegaCDM(x)                 << " ";       // 6
+    fp << get_OmegaLambda(x)              << " ";       // 7
+    fp << get_OmegaR(x)                   << " ";       // 8
+    fp << get_OmegaNu(x)                  << " ";       // 9
+    fp << get_OmegaK(x)                   << " ";       // 10
+    fp << get_luminosity_distance_of_x(x) << " ";       // 11
     fp <<"\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);

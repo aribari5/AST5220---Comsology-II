@@ -81,7 +81,7 @@ def plot_luminosity_distance(filename):
         color="red")
 
     plt.xlabel(r"$z$")
-    plt.ylabel(r"$d_L(z)/z$ [Gyr]")
+    plt.ylabel(r"$d_L(z)/z$ [Gpc]")
     plt.legend()
     plt.xlim(0, 2.5)
 
@@ -199,9 +199,17 @@ def plot_densities():
         color='green'
     )
 
+    plt.plot(
+        x,
+        Omega_M+Omega_Rel+OmegaLambda,
+        label=r"$\Omega_\mathrm{Total}$",
+        color='black',
+        linestyle=':'
+    )
+
     plt.axvline(x=-8.0067, color='gray', linestyle='--', alpha=0.4, label="Radiation dominated era stops")    
     plt.axvline(x=-0.4054, color='gray', linestyle='-.', alpha=0.4, label="DE dominated era starts")  
-    plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total density")
+    plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total expected density")
 
     plt.xlabel(r"$x$")
     plt.ylabel(r"Density parameters")
@@ -217,10 +225,10 @@ def plot_densities():
 if __name__ == "__main__":
     plot_style()
     # plot_luminosity_distance("data/supernovadata.txt") 
-    # plot_dHpdx_over_Hp("cosmology.txt") 
-    # plot_etaHp_over_c("cosmology.txt") # a bit wrong i think
+    # plot_dHpdx_over_Hp("cosmology.txt") # idk how this one should look
+    # plot_etaHp_over_c("cosmology.txt") # a bit wrong, should converge to 1 at early times
     # plot_Hp() #wrong
-    #plot_densities("cosmology.txt")    #wrong
+    #plot_densities()    #yippii
 
 
 
