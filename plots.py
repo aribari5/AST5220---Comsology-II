@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy as sp
 
 def plot_style():
 
@@ -15,7 +16,21 @@ def plot_style():
         "axes.grid": True,
         "grid.alpha": 0.3,
         "grid.linestyle": "--",
-        "text.usetex": True
+        "text.usetex": True,
+        "xtick.labelsize": 12,      
+        "ytick.labelsize": 12,      
+        "xtick.major.size": 6,      
+        "xtick.minor.size": 3,      
+        "ytick.major.size": 6,      
+        "ytick.minor.size": 3,      
+        "xtick.major.width": 1.0,   
+        "xtick.minor.width": 0.75,  
+        "ytick.major.width": 1.0,   
+        "ytick.minor.width": 0.75,  
+        "xtick.direction": "out",   
+        "ytick.direction": "out",   
+        "xtick.color": "black",     
+        "ytick.color": "black",
     })
 
 
@@ -44,6 +59,54 @@ def load_mcmc_results():
 #===========================================#
 # Now the functions for the different plots 
 #===========================================#
+
+def plot_eta_of_x(filename):
+    data       = np.loadtxt(filename, skiprows=1)     # Skip the header
+    x          = data[:,0]
+    eta         = data[:,1]/(1e6*sp.constants.parsec)    
+
+    plt.figure()
+
+    plt.semilogy(
+        x,
+        eta,
+        label=r"$\eta(x)$",
+        color='cyan',
+    )
+
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$\eta(x)$ [Mpc]")
+    plt.legend()
+    plt.xlim(-12, 0)
+    plt.ylim(1e0, 1e4)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_t_of_x(filename):
+    data       = np.loadtxt(filename, skiprows=1)     # Skip the header
+    x          = data[:,0]
+    t          = data[:,2]/(1e9*365.25*24*3600)
+
+    plt.figure()
+
+    plt.semilogy(
+        x,
+        t,
+        label=r"$t(x)$",
+        color='green',
+    )
+
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$t(x)$ [Gyr]")
+    plt.legend()
+    # plt.xlim(0, 0)
+    # plt.ylim(0,0)
+
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 def plot_luminosity_distance(filename):
@@ -123,7 +186,7 @@ def plot_dHpdx_over_Hp(filename):
 def plot_etaHp_over_c(filename):
     data        = np.loadtxt(filename, skiprows=1)     # Skip the header
     x           = data[:,0]                            # x = -ln(1+z)
-    etaHp_over_c = data[:,1]*data[:,3]/(3*10**8)                       # eta*Hp / c
+    etaHp_over_c = data[:,1]*data[:,3]/sp.constants.c                      # eta*Hp / c
 
     plt.figure()
 
@@ -133,23 +196,27 @@ def plot_etaHp_over_c(filename):
         label=r"$\frac{\eta \mathcal{H}}{c}$",
         color='purple'
     )
-
+    plt.axhline(y=1, color='gray', linestyle='--', alpha=0.7, label=r"Convergence to 1 at early times")
     plt.xlabel(r"$x$")
     plt.ylabel(r"$\frac{\eta \mathcal{H}}{c}$")
     plt.legend()
-    #plt.xlim(-2.5, 0)
+    plt.xlim(-14.0, 0)
+    plt.ylim(0.75,3)
 
     plt.tight_layout()
     plt.show()
 
 def plot_Hp():
     data        = load_background_data()
-    x           = data[:,0]                            # x = -ln(1+z)
-    Hp          = data[:,3]                            # Hp
+
+    Mpc_in_km = 1e3*sp.constants.parsec
+    x           = data[:,0]
+    Hp = data[:,3] * Mpc_in_km / 100.0                                         
+   
 
     plt.figure()
 
-    plt.plot(
+    plt.semilogy(
         x,
         Hp,
         label=r"$\mathcal{H}(x)$",
@@ -159,7 +226,8 @@ def plot_Hp():
     plt.xlabel(r"$x$")
     plt.ylabel(r"$\mathcal{H}(x)$")
     plt.legend()
-    #plt.xlim(-2.5, 0)
+    plt.xlim(-12,0)
+    plt.ylim(1e-1, 1e3)
 
     plt.tight_layout()
     plt.show()
@@ -208,6 +276,7 @@ def plot_densities():
         linestyle=':'
     )
 
+    # Should calculate these analytically. 
     plt.axvline(x=-8.0067, color='gray', linestyle='--', alpha=0.4, label="Radiation dominated era stops")    
     plt.axvline(x=-0.4054, color='gray', linestyle='-.', alpha=0.4, label="DE dominated era starts")  
     plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total expected density")
@@ -225,11 +294,15 @@ def plot_densities():
 # Setting the style and calling the plots
 if __name__ == "__main__":
     plot_style()
-    plot_luminosity_distance("data/supernovadata.txt") # correct
-    # plot_dHpdx_over_Hp("cosmology.txt") # idk how this one should look
-    # plot_etaHp_over_c("cosmology.txt") # a bit wrong, should converge to 1 at early times
-    # plot_Hp() #wrong
-    plot_densities()    #yippii
+
+    # plot_eta_of_x("cosmology.txt")    # nice
+    plot_t_of_x("cosmology.txt")        # idk what the limits should be
+    # plot_luminosity_distance("data/supernovadata.txt") # correct
+    # plot_dHpdx_over_Hp("cosmology.txt") # not satisfied, and i should add analytical convergence in diff regimes
+    # plot_etaHp_over_c("cosmology.txt") # yey
+    # plot_Hp() # corect
+    # plot_densities()    #yippii
+
 
 
 
