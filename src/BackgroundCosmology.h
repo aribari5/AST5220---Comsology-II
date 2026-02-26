@@ -30,7 +30,9 @@ class BackgroundCosmology{
 
     // Splines to be made
     Spline eta_of_x_spline{"eta"};
+    Spline eta_deriv_of_x_spline{"eta_deriv"};
     Spline t_of_x_spline{"t"};
+    Spline t_deriv_of_x_spline{"t_deriv"};
  
   public:
 

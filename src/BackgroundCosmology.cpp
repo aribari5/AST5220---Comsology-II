@@ -45,9 +45,9 @@ void BackgroundCosmology::solve(){
   // Set the range of x and the number of points for the splines
   // For this Utils::linspace(x_start, x_end, npts) is useful
   //=============================================================================
-  x_start = -10.0;
-  x_end   = 0.0;
-  int npts    = 100;
+  x_start = -20.0;
+  x_end   = 5.0;
+  int npts    = 200;
 
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 
@@ -112,7 +112,7 @@ void BackgroundCosmology::solve(){
 
   // Setting initial condition, solving the ODE and making the spline.
 
-  double t_initial = 1/(2*H_of_x(x_start));     // in the r. dom. era, t = 1/2H(x)
+  double t_initial = 1.0 / (2.0 * H_of_x(x_start) * Constants.km / Constants.Mpc);     // in the radiation dom. era, t = 1/(2H)
 
   Vector t_ic{t_initial};                   // vector with i.c. for t
 
@@ -124,12 +124,32 @@ void BackgroundCosmology::solve(){
 
   t_of_x_spline.create(x_array, t_array, "t of x");         // create spline
 
+
   std::cout << "---------------------------------\n";
   std::cout << "Age of universe today:\n";
   std::cout << "t(x=0) = "
-            << t_of_x(0.0)/(Constants.Gyr)
+            << t_of_x_spline(0.0)/(Constants.Gyr)
             << " Gyr\n";
   std::cout << "---------------------------------\n";
+
+
+
+  // Sanitychecks.....
+
+  std::cout << "---------------------------------\n";
+  std::cout << "Sanitycheck, should be close to 1:\n";
+  std::cout << "t'(x=0)*H_SI(x=0) = "
+  << t_of_x_spline.deriv_x(0.0) * (H_of_x(0.0) * Constants.km / Constants.Mpc)
+  << "\n";
+  std::cout << "t'(x=2)*H_SI(x=2) = ";
+  std::cout << t_of_x_spline.deriv_x(2.0) * (H_of_x(2.0) * Constants.km / Constants.Mpc)
+  << "\n";
+  std::cout << "t'(x=5)*H_SI(x=5) = ";
+  std::cout << t_of_x_spline.deriv_x(5.0) * (H_of_x(5.0) * Constants.km / Constants.Mpc)
+  << "\n";
+  std::cout << "---------------------------------\n";
+
+
 
   Utils::EndTiming("t of x");
 }
@@ -404,8 +424,8 @@ void BackgroundCosmology::info() const{
 // Output some data to file
 //====================================================
 void BackgroundCosmology::output(const std::string filename) const{
-  const double x_min = -10.0;
-  const double x_max =  0.0;
+  const double x_min = -20.0;
+  const double x_max =  5.0;
   const int    n_pts =  100;
   
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
