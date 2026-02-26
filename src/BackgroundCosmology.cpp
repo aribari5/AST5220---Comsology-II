@@ -87,18 +87,33 @@ void BackgroundCosmology::solve(){
             << " Gyr\n";
   std::cout << "---------------------------------\n";
 
+  // Sanitychecks
+
+  std::cout << "---------------------------------\n";
+  std::cout << "Sanitycheck, should be close to 1:\n";
+
+  std::cout << "eta'(x=-2)*Hp(x=-2)/c = "
+  << eta_of_x_spline.deriv_x(-2.0) * (Hp_of_x(-2.0) / Constants.c)
+  << "\n";
+  std::cout << "eta'(x=0)*Hp(x=0)/c = "
+  << eta_of_x_spline.deriv_x(0.0) * (Hp_of_x(0.0) / Constants.c)
+  << "\n";
+  std::cout << "eta'(x=2)*Hp(x=2)/c = ";
+  std::cout << eta_of_x_spline.deriv_x(2.0) * (Hp_of_x(2.0) / Constants.c)
+  << "\n";
+  std::cout << "eta'(x=5)*Hp(x=5)/c = ";
+  std::cout << eta_of_x_spline.deriv_x(5.0) * (Hp_of_x(5.0) / Constants.c)
+  << "\n";
+  std::cout << "---------------------------------\n";
+
+
+
 
   Utils::EndTiming("Eta");
 
 
   // Similar for t(x)
   Utils::StartTiming("t of x");
-
-  //x_start = -10.0;
-  //x_end   = 0.0;
-  //int npts    = 100;
-  // and
-  //Vector x_array = Utils::linspace(x_start, x_end, npts);
 
   // The (rhs of) ODE for dt/dx
   ODEFunction dtdx = [&](double x, const double *t, double *dtdx){
@@ -138,6 +153,11 @@ void BackgroundCosmology::solve(){
 
   std::cout << "---------------------------------\n";
   std::cout << "Sanitycheck, should be close to 1:\n";
+
+  std::cout << "t'(x=-2)*H_SI(x=-2) = "
+  << t_of_x_spline.deriv_x(-2.0) * (H_of_x(-2.0) * Constants.km / Constants.Mpc)
+  << "\n";  
+
   std::cout << "t'(x=0)*H_SI(x=0) = "
   << t_of_x_spline.deriv_x(0.0) * (H_of_x(0.0) * Constants.km / Constants.Mpc)
   << "\n";
@@ -149,7 +169,7 @@ void BackgroundCosmology::solve(){
   << "\n";
   std::cout << "---------------------------------\n";
 
-
+  // yep. sane.
 
   Utils::EndTiming("t of x");
 }
