@@ -47,7 +47,7 @@ void BackgroundCosmology::solve(){
   //=============================================================================
   x_start = -20.0;
   x_end   = 5.0;
-  int npts    = 200;
+  int npts    =1e4;
 
   Vector x_array = Utils::linspace(x_start, x_end, npts);
 
@@ -340,9 +340,7 @@ double BackgroundCosmology::get_luminosity_distance_of_x(double x) const{
   //=============================================================================
   
   
-  double d_L_seconds = get_angular_distance_of_x(x) * exp(-2.0 * x);
-  double d_L = d_L_seconds  / Constants.Mpc / 1e3;                    // Gpc
-
+  double d_L = get_angular_distance_of_x(x) * exp(-2.0 * x);
   return d_L;
 }
 

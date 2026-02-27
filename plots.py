@@ -46,7 +46,7 @@ def load_mcmc_results():
     # Load the results from the MCMC fitting
 
     filename = "results_supernovafitting.txt"
-    data = np.loadtxt(filename, skiprows=200)   # Skip the burnin of the first chains
+    data = np.loadtxt(filename, skiprows=500)   # Skip the burnin of the first chains
 
     # Extract parameters
     chi2    = data[:,0]
@@ -290,21 +290,127 @@ def plot_densities():
     plt.show()
 
 
+def plot_mcmc_scatterplot():
+
+    data        = load_mcmc_results()
+    chi2        = data[0]
+    h           = data[1]
+    Omega_M     = data[2]
+    Omega_K     = data[3]
+
+    # min chi2 and corresponding parameters
+    min_chi2 = np.min(chi2)
+    arg_min_chi2 = np.argmin(chi2)
+
+    best_fit_h = h[arg_min_chi2]
+    best_fit_Omega_M = Omega_M[arg_min_chi2]
+    best_fit_Omega_K = Omega_K[arg_min_chi2]
+
+    # Calculate Omega_Lambda from the flatness condition
+    Omega_Lambda = 1 - Omega_M - Omega_K
+
+
+    # Empty lists get appended with the parameters that are within the 1-sigma
+    one_sigma_Omega_M = []
+    one_sigma_Omega_Lambda = []
+    # Empty lists get appended with the parameters that are within the 2-sigma (i.e. 2sig-1sig region)
+    two_sigma_Omega_M = []
+    two_sigma_Omega_Lambda = []
+
+    for i in range(len(chi2)):
+        if chi2[i] <= min_chi2 + 3.53: 
+            one_sigma_Omega_M.append(Omega_M[i])
+            one_sigma_Omega_Lambda.append(Omega_Lambda[i])
+   
+        elif min_chi2 + 3.53 < chi2[i] <= min_chi2 + 8.02: 
+            two_sigma_Omega_M.append(Omega_M[i])
+            two_sigma_Omega_Lambda.append(Omega_Lambda[i])
+    
+
+
+    
+
+    # Scatterplot in the Omega_M - Omega_Lambda plane
+    plt.figure()
+    plt.scatter(two_sigma_Omega_M, two_sigma_Omega_Lambda, color='purple', alpha=0.5, label=r"2-$\sigma$ region")
+    plt.scatter(one_sigma_Omega_M, one_sigma_Omega_Lambda, color='blue', alpha=0.5, label=r"1-$\sigma$ region")
+
+    # Add the line corresponding to a flat universe
+    Omega_M_flat = np.linspace(0, 1, 100)
+    Omega_Lambda_flat = 1 - Omega_M_flat
+    plt.plot(Omega_M_flat, Omega_Lambda_flat, color='black', linestyle='--', label="Flat Universe")
+
+    plt.xlabel(r"$\Omega_M$")
+    plt.ylabel(r"$\Omega_\Lambda$")
+    plt.legend()
+    plt.xlim(0, 1)
+    plt.ylim(0, 1.5)
+    plt.tight_layout()
+    plt.show()
+
+def plot_mcmc_Omega_Lambda_posterior():
+
+    data        = load_mcmc_results()
+    chi2        = data[0]
+    h           = data[1]
+    Omega_M     = data[2]
+    Omega_K     = data[3]
+
+    # min chi2 and corresponding parameters
+    min_chi2 = np.min(chi2)
+    arg_min_chi2 = np.argmin(chi2)
+
+    best_fit_h = h[arg_min_chi2]
+    best_fit_Omega_M = Omega_M[arg_min_chi2]
+    best_fit_Omega_K = Omega_K[arg_min_chi2]
+
+    best_fit_Omega_Lambda = 1 - best_fit_Omega_M - best_fit_Omega_K
+
+    # Calculate Omega_Lambda from the flatness condition
+    Omega_Lambda = 1 - Omega_M - Omega_K
+
+    # Values for Gaussian approximation of the posterior 
+    mean_Omega_Lambda = np.mean(Omega_Lambda)
+    std_Omega_Lambda = np.std(Omega_Lambda)
+
+    #Fit a Gaussian to the posterior
+    x  = np.linspace(min(Omega_Lambda), max(Omega_Lambda), 200)
+
+    plt.figure()
+
+    _,bins,_ =  plt.hist(Omega_Lambda, bins=45, color='blue', alpha=0.7)
+    bin_width = bins[1] - bins[0]
+
+    gaussian_fit = sp.stats.norm.pdf(x, mean_Omega_Lambda, std_Omega_Lambda)*len(Omega_Lambda)*(bin_width)  # Scale the Gaussian to match the histogram
+
+
+    plt.axvline(mean_Omega_Lambda, color='red', linestyle='--', label=f"Mean:")
+    plt.axvline(mean_Omega_Lambda - std_Omega_Lambda, color='red', linestyle=':', label=r"$\pm1$-$\sigma$")
+    plt.axvline(mean_Omega_Lambda + std_Omega_Lambda, color='red', linestyle=':')
+    plt.axvline(best_fit_Omega_Lambda, color='black', linestyle='--', label=f"Best fit from Planck")
+    plt.plot(x, gaussian_fit, color='orange', linestyle='-', label="Gaussian fit to posterior")
+
+    plt.xlabel(r"$\Omega_\Lambda$")
+    plt.ylabel(r"Frequency")
+    plt.tight_layout()
+    plt.legend()
+    plt.show()
+
+
+
 
 # Setting the style and calling the plots
 if __name__ == "__main__":
     plot_style()
 
     # plot_eta_of_x("cosmology.txt")    # nice
-    plot_t_of_x("cosmology.txt")        # idk what the limits should be
+    # plot_t_of_x("cosmology.txt")        # idk what the limits should be
     # plot_luminosity_distance("data/supernovadata.txt") # correct
     # plot_dHpdx_over_Hp("cosmology.txt") # not satisfied, and i should add analytical convergence in diff regimes
     # plot_etaHp_over_c("cosmology.txt") # yey
     # plot_Hp() # corect
     # plot_densities()    #yippii
-
-
-
-
+    # plot_mcmc_scatterplot() #niiice
+    # plot_mcmc_Omega_Lambda_posterior() #yep
 
 
