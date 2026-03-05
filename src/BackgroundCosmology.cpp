@@ -118,8 +118,7 @@ void BackgroundCosmology::solve(){
   // The (rhs of) ODE for dt/dx
   ODEFunction dtdx = [&](double x, const double *t, double *dtdx){
 
-    double H_SI = H_of_x(x) * Constants.km / Constants.Mpc;             // Hubble parameter today in 1/s 
-    dtdx[0] = 1/H_SI;
+    dtdx[0] = 1/H0_SI;
 
     return GSL_SUCCESS;
   };
@@ -127,7 +126,7 @@ void BackgroundCosmology::solve(){
 
   // Setting initial condition, solving the ODE and making the spline.
 
-  double t_initial = 1.0 / (2.0 * H_of_x(x_start) * Constants.km / Constants.Mpc);     // in the radiation dom. era, t = 1/(2H)
+  double t_initial = 1.0 / (2.0 * H_of_x(x_start));     // in the radiation dom. era, t = 1/(2H)
 
   Vector t_ic{t_initial};                   // vector with i.c. for t
 
@@ -155,17 +154,17 @@ void BackgroundCosmology::solve(){
   std::cout << "Sanitycheck, should be close to 1:\n";
 
   std::cout << "t'(x=-2)*H_SI(x=-2) = "
-  << t_of_x_spline.deriv_x(-2.0) * (H_of_x(-2.0) * Constants.km / Constants.Mpc)
+  << t_of_x_spline.deriv_x(-2.0) * (H_of_x(-2.0))
   << "\n";  
 
   std::cout << "t'(x=0)*H_SI(x=0) = "
-  << t_of_x_spline.deriv_x(0.0) * (H_of_x(0.0) * Constants.km / Constants.Mpc)
+  << t_of_x_spline.deriv_x(0.0) * (H_of_x(0.0))
   << "\n";
   std::cout << "t'(x=2)*H_SI(x=2) = ";
-  std::cout << t_of_x_spline.deriv_x(2.0) * (H_of_x(2.0) * Constants.km / Constants.Mpc)
+  std::cout << t_of_x_spline.deriv_x(2.0) * (H_of_x(2.0))
   << "\n";
   std::cout << "t'(x=5)*H_SI(x=5) = ";
-  std::cout << t_of_x_spline.deriv_x(5.0) * (H_of_x(5.0) * Constants.km / Constants.Mpc)
+  std::cout << t_of_x_spline.deriv_x(5.0) * (H_of_x(5.0))
   << "\n";
   std::cout << "---------------------------------\n";
 
@@ -189,7 +188,9 @@ double BackgroundCosmology::H_of_x(double x) const{
     + OmegaLambda 
     + OmegaK*exp(-2.0*x) );
 
-  return H;
+
+  double H_SI = H*Constants.km/Constants.Mpc;
+  return H_SI;
 }
 
 double BackgroundCosmology::Hp_of_x(double x) const{
@@ -197,9 +198,9 @@ double BackgroundCosmology::Hp_of_x(double x) const{
   // The conformal Hubble parameter as a function of x = exp(a). Using Hp = a*H = exp(x)*H
   //=============================================================================
 
-  // double H_SI = H_of_x(x) * Constants.km / Constants.Mpc;  // in 1/s
-  double Hp = exp(x) * H_of_x(x);  // conformal Hubble in km/s/Mpc
-  return Hp;
+  double H_SI = H_of_x(x);  // in 1/s
+  double Hp_SI = exp(x) * H_of_x(x);  // conformal Hubble in 1/s
+  return Hp_SI;
 }
 
 double BackgroundCosmology::dHpdx_of_x(double x) const{
@@ -213,7 +214,7 @@ double BackgroundCosmology::dHpdx_of_x(double x) const{
   
 
 
-  double dHpdx = Hp + exp(x)*pow(H0,2.0)/(2*H)
+  double dHpdx = Hp + exp(x)*pow(H0_SI,2.0)/(2*H)
                 * ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
                     -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
                     -2.0*OmegaK*exp(-2.0*x) );
@@ -231,7 +232,7 @@ double BackgroundCosmology::ddHpddx_of_x(double x) const{
   double H = H_of_x(x);         
   double Hp = Hp_of_x(x);
   double dHpdx = dHpdx_of_x(x);
-  double dHdx = pow(H0,2.0)/(2.0*H) *
+  double dHdx = pow(H0_SI,2.0)/(2.0*H) *
                 ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
                     -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
                     -2.0*OmegaK*exp(-2.0*x) );
@@ -239,7 +240,7 @@ double BackgroundCosmology::ddHpddx_of_x(double x) const{
 
 
 
-  double ddHpddx = dHpdx + pow(H0,2.0)/2.0 * ( 
+  double ddHpddx = dHpdx + pow(H0_SI,2.0)/2.0 * ( 
                   (exp(x)*H-exp(x)*dHdx)/pow(H,2.0) *
                   ( -3.0*(OmegaB + OmegaCDM)*exp(-3.0*x) 
                     -4.0*(OmegaR + OmegaNu)*exp(-4.0*x) 
@@ -256,7 +257,7 @@ double BackgroundCosmology::get_OmegaB(double x) const{
   // The baryon density as a function of x = exp(a).
   //=============================================================================
 
-  double OmegaB_x = OmegaB * exp(-3.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaB_x = OmegaB * exp(-3.0*x) * pow(H0_SI/H_of_x(x),2.0);
 
   return OmegaB_x;
 }
@@ -266,7 +267,7 @@ double BackgroundCosmology::get_OmegaR(double x) const{
   // The radiation density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaR_x = OmegaR * exp(-4.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaR_x = OmegaR * exp(-4.0*x) * pow(H0_SI/H_of_x(x),2.0);
 
   return OmegaR_x;
 }
@@ -276,7 +277,7 @@ double BackgroundCosmology::get_OmegaNu(double x) const{
   // The neutrino density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaNu_x = OmegaNu * exp(-4.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaNu_x = OmegaNu * exp(-4.0*x) * pow(H0_SI/H_of_x(x),2.0);
 
   return OmegaNu_x;
 }
@@ -286,7 +287,7 @@ double BackgroundCosmology::get_OmegaCDM(double x) const{
   // The CDM density as a function of x = exp(a).
   //=============================================================================
     
-  double OmegaCDM_x = OmegaCDM * exp(-3.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaCDM_x = OmegaCDM * exp(-3.0*x) * pow(H0_SI/H_of_x(x),2.0);
 
 
   return OmegaCDM_x;
@@ -297,7 +298,7 @@ double BackgroundCosmology::get_OmegaLambda(double x) const{
   // The dark energy density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaLambda_x = OmegaLambda * pow(H0/H_of_x(x),2.0);
+  double OmegaLambda_x = OmegaLambda * pow(H0_SI/H_of_x(x),2.0);
 
   return OmegaLambda_x;
 }
@@ -307,7 +308,7 @@ double BackgroundCosmology::get_OmegaK(double x) const{
   // The curvature density as a function of x = exp(a).
   //=============================================================================
   
-  double OmegaK_x = OmegaK * exp(-2.0*x) * pow(H0/H_of_x(x),2.0);
+  double OmegaK_x = OmegaK * exp(-2.0*x) * pow(H0_SI/H_of_x(x),2.0);
 
   return OmegaK_x;
 }
@@ -449,25 +450,25 @@ void BackgroundCosmology::output(const std::string filename) const{
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
 
   std::ofstream fp(filename.c_str());
-  auto print_data = [&] (const double x) {
-    fp << x                               << " ";       // 0
-    fp << eta_of_x(x)                     << " ";       // 1
-    fp << t_of_x(x)                       << " ";       // 2
-    fp << Hp_of_x(x)                      << " ";       // 3
-    fp << dHpdx_of_x(x)                   << " ";       // 4
-    fp << get_OmegaB(x)                   << " ";       // 5
-    fp << get_OmegaCDM(x)                 << " ";       // 6
-    fp << get_OmegaLambda(x)              << " ";       // 7
-    fp << get_OmegaR(x)                   << " ";       // 8
-    fp << get_OmegaNu(x)                  << " ";       // 9
-    fp << get_OmegaK(x)                   << " ";       // 10
-    fp << get_luminosity_distance_of_x(x) << " ";       // 11
-    fp << ddHpddx_of_x(x)                 << " ";       // 12
-    fp << OmegaB                          << " ";       // 13
-    fp << OmegaCDM                        << " ";       // 14
-    fp << OmegaLambda                     << " ";       // 15
-    fp << OmegaR                          << " ";       // 16
-    fp << OmegaNu                         << " ";       // 17
+  auto print_data = [&] (const double x) {              // summary of units (useful for plotting)
+    fp << x                               << " ";       // 0 units: dimensionless
+    fp << eta_of_x(x)                     << " ";       // 1 units: meters
+    fp << t_of_x(x)                       << " ";       // 2 units: seconds
+    fp << Hp_of_x(x)                      << " ";       // 3 units: 1/s
+    fp << dHpdx_of_x(x)                   << " ";       // 4 units: 1/s
+    fp << get_OmegaB(x)                   << " ";       // 5 units: dimensionless
+    fp << get_OmegaCDM(x)                 << " ";       // 6 units: dimensionless
+    fp << get_OmegaLambda(x)              << " ";       // 7 units: dimensionless
+    fp << get_OmegaR(x)                   << " ";       // 8 units: dimensionless
+    fp << get_OmegaNu(x)                  << " ";       // 9 units: dimensionless
+    fp << get_OmegaK(x)                   << " ";       // 10 units: dimensionless
+    fp << get_luminosity_distance_of_x(x) << " ";       // 11 units: meters
+    fp << ddHpddx_of_x(x)                 << " ";       // 12 units: 1/s
+    fp << OmegaB                          << " ";       // 13 units: dimensionless
+    fp << OmegaCDM                        << " ";       // 14 units: dimensionless
+    fp << OmegaLambda                     << " ";       // 15 units: dimensionless
+    fp << OmegaR                          << " ";       // 16 units: dimensionless
+    fp << OmegaNu                         << " ";       // 17 units: dimensionless
     fp <<"\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);

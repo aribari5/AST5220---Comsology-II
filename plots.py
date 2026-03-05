@@ -73,6 +73,17 @@ def calculate_x_matter_dark_energy_equality():
 
     return x_mat_DE_eq
 
+def caluclate_x_onset_of_acceleration():
+    data = load_background_data()
+
+    Omega_b     = data[0,13]
+    Omega_CDM   = data[0,14]
+    Omega_Lambda = data[0,15]
+
+    # From analytical calculaton
+    x_ons_of_acc = (1/3)*np.log((Omega_b+Omega_CDM)/(2*Omega_Lambda))
+
+    return x_ons_of_acc
 
 
 def load_mcmc_results():
@@ -104,7 +115,7 @@ def plot_eta_of_x(filename):
         x,
         eta,
         label=r"$\eta(x)$",
-        color='cyan',
+        color='blue',
     )
 
     plt.xlabel(r"$x$")
@@ -170,6 +181,7 @@ def plot_luminosity_distance(filename):
         color='blue',
     )
 
+    # The line isnt showing
     plt.plot(
         z_model,
         dL_model/z_model,
@@ -362,6 +374,13 @@ def plot_densities():
     
     plt.axvline(x=x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
     plt.axvline(x=x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
+
+    #Vertical line for onset of acceleration
+
+    x_onset_of_acc =  caluclate_x_onset_of_acceleration()
+
+    plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
+
          
  
     plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total expected density")
@@ -535,17 +554,17 @@ def plot_mcmc_H0():
 if __name__ == "__main__":
     plot_style()
 
-    plot_eta_of_x("cosmology.txt")    # wtf
+    plot_eta_of_x("cosmology.txt")    # true
     plot_t_of_x("cosmology.txt")        # idk what the limits should be
-    plot_luminosity_distance("data/supernovadata.txt") # wtf
-    # plot_dHpdx_over_Hp("cosmology.txt") # good
-    # plot_ddHpddx_over_Hp("cosmology.txt") # yey
-    # plot_etaHp_over_c("cosmology.txt") # yey
-    plot_Hp() # wtf
-    # plot_densities()    #yippii
-    plot_mcmc_scatterplot() #wtf
-    plot_mcmc_Omega_Lambda_posterior() #wtf
-    plot_mcmc_H0()    #wtf
+    plot_luminosity_distance("data/supernovadata.txt") 
+    plot_dHpdx_over_Hp("cosmology.txt") 
+    plot_ddHpddx_over_Hp("cosmology.txt")  
+    plot_etaHp_over_c("cosmology.txt") 
+    plot_Hp()  
+    plot_densities()    #yippii
+    plot_mcmc_scatterplot() #nice
+    plot_mcmc_Omega_Lambda_posterior() #nice
+    plot_mcmc_H0()    #nice
 
-    # faulty plots most likely due to not returning Hp in SI..
+    # faulty plots most likely due unit mismatchs in Hp' things in .cpp
 
