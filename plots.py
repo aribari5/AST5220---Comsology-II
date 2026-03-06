@@ -82,7 +82,8 @@ def caluclate_x_onset_of_acceleration():
 
     # From analytical calculaton
     x_ons_of_acc = (-1/3)*np.log((2*Omega_Lambda)/(Omega_b+Omega_CDM))
-    print(f"Onset of acceleration occurs at z = {np.exp(-x_ons_of_acc)-1:.2f}")
+    
+    # print(f"Onset of acceleration occurs at z = {np.exp(-x_ons_of_acc)-1:.2f}")
 
     return x_ons_of_acc
 
@@ -118,7 +119,7 @@ def plot_eta_of_x(filename):
         label=r"$\eta(x)$",
         color='blue',
     )
-
+    
     plt.xlabel(r"$x$")
     plt.ylabel(r"$\eta(x)$ [Mpc]")
     plt.legend()
@@ -126,6 +127,7 @@ def plot_eta_of_x(filename):
     plt.ylim(1e0, 1e4)
 
     plt.tight_layout()
+    plt.savefig("figures/eta_of_x.pdf")
     plt.show()
 
 def plot_t_of_x(filename):
@@ -149,6 +151,7 @@ def plot_t_of_x(filename):
     # plt.ylim(0,0)
 
     plt.tight_layout()
+    plt.savefig("figures/t_of_x.pdf")
     plt.show()
 
 
@@ -157,13 +160,15 @@ def plot_t_of_x(filename):
 def plot_luminosity_distance(filename):
     data        = np.loadtxt(filename, skiprows=1)     # Skip the header
     z           = data[:,0]                            # Redshift
-    d_L         = data[:,1]                            # in Gyr
-    errorbars   = data[:,2]                            # in Gyr
+    d_L         = data[:,1]                            # in Gpc
+    errorbars   = data[:,2]                            # in Gpc
 
     cosmo_data = load_background_data()
     x           = cosmo_data[:,0]
     z_model     = np.exp(-x) - 1
-    dL_model    = cosmo_data[:,11]   
+    dL_model_SI    = cosmo_data[:,11]   # in m!
+    dL_model_Gpc = dL_model_SI / (1e9*sp.constants.parsec)  #Gpc
+
 
     # We wish to plot d_L / z (remember the errorbars!):
     dL_over_z = d_L / z
@@ -182,10 +187,9 @@ def plot_luminosity_distance(filename):
         color='blue',
     )
 
-    # The line isnt showing
     plt.plot(
         z_model,
-        dL_model/z_model,
+        dL_model_Gpc/z_model,
         label="Fiducial model",
         color="red")
 
@@ -197,6 +201,7 @@ def plot_luminosity_distance(filename):
 
 
     plt.tight_layout()
+    plt.savefig("figures/dL_z_SN.pdf")
     plt.show()
     
 
@@ -215,14 +220,20 @@ def plot_dHpdx_over_Hp(filename):
         color='green'
     )
     
-    # Vertical lines for matter, radiation and dark energy domination
+    #Vertical lines for matter, radiation and dark energy domination
 
     x_rad_mat_eq = calculate_x_radiation_matter_equality()
     x_mat_DE_eq = calculate_x_matter_dark_energy_equality()
-
-    plt.axvline(x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
-    plt.axvline(x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
     
+    plt.axvline(x=x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
+    plt.axvline(x=x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
+
+    #Vertical line for onset of acceleration
+
+    x_onset_of_acc =  caluclate_x_onset_of_acceleration()
+
+    plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
+
 
     # Horizontal lines for the analytical convergence in the different regimes  
     plt.axhline(y=-1, color='orange', linestyle='--', alpha=0.7, label="Radiation dominated era convergence")
@@ -235,6 +246,7 @@ def plot_dHpdx_over_Hp(filename):
     #plt.xlim(-2.5, 0)
 
     plt.tight_layout()
+    # plt.savefig("figures/Hp'_over_Hp.pdf")
     plt.show()
 
 def plot_ddHpddx_over_Hp(filename):
@@ -255,9 +267,15 @@ def plot_ddHpddx_over_Hp(filename):
     x_rad_mat_eq = calculate_x_radiation_matter_equality()
     x_mat_DE_eq = calculate_x_matter_dark_energy_equality()
     
-    plt.axvline(x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
-    plt.axvline(x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
-         
+    plt.axvline(x=x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
+    plt.axvline(x=x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
+
+    #Vertical line for onset of acceleration
+
+    x_onset_of_acc =  caluclate_x_onset_of_acceleration()
+
+    plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
+
 
     # Horizontal lines for the analytical convergence in the different regimes  
     plt.axhline(y=1, color='orange', linestyle='--', alpha=0.7, label="Radiation and DE dominated era convergence")
@@ -271,6 +289,7 @@ def plot_ddHpddx_over_Hp(filename):
     #plt.xlim(-2.5, 0)
 
     plt.tight_layout()
+    plt.savefig("figures/Hp''_over_Hp.pdf")
     plt.show()
 
 
@@ -290,14 +309,30 @@ def plot_etaHp_over_c(filename):
         label=r"$\frac{\eta \mathcal{H}}{c}$",
         color='purple'
     )
-    plt.axhline(y=1, color='gray', linestyle='--', alpha=0.7, label=r"Convergence to 1 at early times")
+    plt.axhline(y=1, color='black', linestyle='--', alpha=0.7, label=r"Convergence to 1 at early times")
     plt.xlabel(r"$x$")
     plt.ylabel(r"$\frac{\eta \mathcal{H}}{c}$")
-    plt.legend()
     plt.xlim(-14.0, 0)
     plt.ylim(0.75,3)
 
+    #Vertical lines for matter, radiation and dark energy domination
+
+    x_rad_mat_eq = calculate_x_radiation_matter_equality()
+    x_mat_DE_eq = calculate_x_matter_dark_energy_equality()
+    
+    plt.axvline(x=x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
+    plt.axvline(x=x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
+
+    #Vertical line for onset of acceleration
+
+    x_onset_of_acc =  caluclate_x_onset_of_acceleration()
+
+    plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
+
+
+    plt.legend()
     plt.tight_layout()
+    plt.savefig("figures/etaHp_over_c.pdf")
     plt.show()
 
 def plot_Hp():
@@ -319,11 +354,27 @@ def plot_Hp():
 
     plt.xlabel(r"$x$")
     plt.ylabel(r"$\mathcal{H}(x)$")
-    plt.legend()
-    plt.xlim(-12,0)
+    plt.xlim(-12,5)
     plt.ylim(1e-1, 1e3)
 
+    #Vertical lines for matter, radiation and dark energy domination
+
+    x_rad_mat_eq = calculate_x_radiation_matter_equality()
+    x_mat_DE_eq = calculate_x_matter_dark_energy_equality()
+    
+    plt.axvline(x=x_rad_mat_eq, color='gray', linestyle='--', alpha=0.7, label="Radiation dominated era stops")    
+    plt.axvline(x=x_mat_DE_eq, color='gray', linestyle='-.', alpha=0.7, label="DE dominated era starts")   
+
+    #Vertical line for onset of acceleration
+
+    x_onset_of_acc =  caluclate_x_onset_of_acceleration()
+
+    plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
+
+
+    plt.legend()
     plt.tight_layout()
+    plt.savefig("figures/Hp.pdf")
     plt.show()
     
 def plot_densities():
@@ -385,8 +436,8 @@ def plot_densities():
     plt.axvline(x=x_onset_of_acc, color='gray', linestyle=':', alpha=0.7, label="Onset of acceleration")   
 
          
- 
-    plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total expected density")
+    # Can also print abs(sum of densities - 1) as a separate sanity check.
+    plt.axhline(y=1, color='gray', linestyle=':', alpha=0.4, label="Total expected density = 1")
 
     plt.xlabel(r"$x=\ln a$")
     plt.ylabel(r"Density parameters")
@@ -394,6 +445,7 @@ def plot_densities():
     #plt.xlim(-2.5, 0)
 
     plt.tight_layout()
+    plt.savefig("figures/densities.pdf")
     plt.show()
 
 
@@ -453,6 +505,7 @@ def plot_mcmc_scatterplot():
     plt.xlim(0, 1)
     plt.ylim(0, 1.5)
     plt.tight_layout()
+    plt.savefig("figures/MCMC_scatterplot.pdf")
     plt.show()
 
 def plot_mcmc_Omega_Lambda_posterior():
@@ -499,8 +552,9 @@ def plot_mcmc_Omega_Lambda_posterior():
 
     plt.xlabel(r"$\Omega_\Lambda$")
     plt.ylabel(r"Frequency")
-    plt.tight_layout()
     plt.legend()
+    plt.tight_layout()
+    plt.savefig("figures/MCMC_Omega_Lambda_posterior.pdf")
     plt.show()
 
 
@@ -545,8 +599,9 @@ def plot_mcmc_H0():
 
     plt.xlabel(r"$h$")
     plt.ylabel(r"Frequency")
-    plt.tight_layout()
     plt.legend()
+    plt.tight_layout()
+    plt.savefig("figures/MCMC_H0_posterior.pdf")
     plt.show()
 
 
@@ -559,14 +614,14 @@ if __name__ == "__main__":
 
     # plot_eta_of_x("cosmology.txt") 
     # plot_t_of_x("cosmology.txt")
-    # plot_luminosity_distance("data/supernovadata.txt") # ^
+    # plot_luminosity_distance("data/supernovadata.txt") 
     # plot_dHpdx_over_Hp("cosmology.txt") 
     # plot_ddHpddx_over_Hp("cosmology.txt")  
     # plot_etaHp_over_c("cosmology.txt") 
     # plot_Hp()  
-    plot_densities()    #yippii
-    # plot_mcmc_scatterplot() #nice
-    # plot_mcmc_Omega_Lambda_posterior() #nice
-    # plot_mcmc_H0()    #nice
+    # plot_densities()
+    # plot_mcmc_scatterplot()
+    # plot_mcmc_Omega_Lambda_posterior()
+    # plot_mcmc_H0()
 
 
